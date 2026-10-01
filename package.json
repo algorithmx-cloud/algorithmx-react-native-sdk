@@ -1,5 +1,5 @@
 {
-  "name": "@algorithmx/react-native-sdk",
+  "name": "@algorithmxcloud/react-native-sdk",
   "version": "1.0.0",
   "description": "AlgorithmX SDK for React Native: customer identity and events, push notifications, campaign actions, and in-app campaigns on Android and iOS.",
   "main": "lib/index.js",
@@ -30,7 +30,7 @@
     "in-app-messaging",
     "analytics"
   ],
-  "homepage": "https://algorithmx.com/en/docs/integrations/react-native",
+  "homepage": "https://algorithmx.cloud/en/docs/integrations/react-native",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/algorithmx-cloud/algorithmx-react-native-sdk.git"
@@ -38,7 +38,7 @@
   "bugs": {
     "url": "https://github.com/algorithmx-cloud/algorithmx-react-native-sdk/issues"
   },
-  "author": "AlgorithmX <hello@algorithmx.com>",
+  "author": "AlgorithmX <hello@algorithmx.cloud>",
   "license": "MIT",
   "publishConfig": {
     "access": "public"

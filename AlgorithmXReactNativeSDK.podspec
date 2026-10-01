@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.summary       = 'AlgorithmX SDK for React Native – iOS bridge'
   s.homepage      = 'https://github.com/algorithmx-cloud/algorithmx-react-native-sdk'
   s.license       = { :type => 'MIT', :file => 'LICENSE' }
-  s.author        = { 'AlgorithmX' => 'hello@algorithmx.com' }
+  s.author        = { 'AlgorithmX' => 'hello@algorithmx.cloud' }
   s.platform      = :ios, '15.1'
   s.swift_version = '5.9'
   # Autolinking installs this pod from node_modules; the source is only used

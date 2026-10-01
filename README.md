@@ -1,6 +1,6 @@
 # AlgorithmX React Native SDK
 
-Connect your React Native app to [AlgorithmX](https://algorithmx.com), the campaign management and customer data platform. The SDK sends customer identity and events, handles AlgorithmX push notifications, routes campaign actions to your navigation, and shows in-app campaigns on Android and iOS.
+Connect your React Native app to [AlgorithmX](https://algorithmx.cloud), the campaign management and customer data platform. The SDK sends customer identity and events, handles AlgorithmX push notifications, routes campaign actions to your navigation, and shows in-app campaigns on Android and iOS.
 
 It wraps the native [AlgorithmX Android SDK](https://github.com/algorithmx-cloud/algorithmx-android-sdk) and [AlgorithmX iOS SDK](https://github.com/algorithmx-cloud/algorithmx-ios-sdk).
 
@@ -11,7 +11,7 @@ It wraps the native [AlgorithmX Android SDK](https://github.com/algorithmx-cloud
 ## Installation
 
 ```bash
-npm install @algorithmx/react-native-sdk
+npm install @algorithmxcloud/react-native-sdk
 ```
 
 **Android:** nothing else. The native SDK comes from Maven Central.
@@ -40,7 +40,7 @@ AlgorithmXReactNative.initialize(apiBaseUrl: "https://api.example.com")
 Then, at your app's entry, register listeners and bind JavaScript with the same URL:
 
 ```ts
-import AlgorithmX from '@algorithmx/react-native-sdk';
+import AlgorithmX from '@algorithmxcloud/react-native-sdk';
 
 AlgorithmX.addListener('onDeepLink', ({ url }) => {
   // Open the URL with your router.
@@ -53,7 +53,7 @@ AlgorithmX.trackEvent('add_to_cart', { product_id: 'SKU-123', quantity: 2 });
 
 The integration guide covers push notifications on both platforms, all listeners, and testing.
 
-**[React Native integration guide →](https://algorithmx.com/en/docs/integrations/react-native)**
+**[React Native integration guide →](https://algorithmx.cloud/en/docs/integrations/react-native)**
 
 ## Development
 

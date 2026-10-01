@@ -1,12 +1,12 @@
-# Publishes @algorithmx/react-native-sdk to npm when a version tag such as 1.0.0
+# Publishes @algorithmxcloud/react-native-sdk to npm when a version tag such as 1.0.0
 # is pushed. `npm publish` runs the prepack script, which compiles src/ to lib/.
 #
 # Repository secret:
-#   NPM_TOKEN  granular access token of the npm "algorithmx" organization with
-#              read and write access to @algorithmx/react-native-sdk
+#   NPM_TOKEN  granular access token of the npm "algorithmxcloud" organization with
+#              read and write access to @algorithmxcloud/react-native-sdk
 #
 # Publish the Android SDK (Maven Central) and tag the iOS SDK first: this
-# package depends on com.algorithmx:android-sdk and the AlgorithmXSDK pod.
+# package depends on cloud.algorithmx:android-sdk and the AlgorithmXSDK pod.
 name: Release
 
 on:

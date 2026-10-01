@@ -1,5 +1,5 @@
 /**
- * @algorithmx/react-native-sdk
+ * @algorithmxcloud/react-native-sdk
  * AlgorithmX SDK for React Native
  *
  * Wrapper around the native Android (Kotlin) and iOS (Swift) AlgorithmX SDKs.
@@ -10,7 +10,7 @@
  *      iOS      AlgorithmXReactNative.initialize(apiBaseUrl:)   in AppDelegate
  *      Android  AlgorithmXReactNative.initialize(app, url)      in Application.onCreate
  *    then register listeners and bind JS with the same URL:
- *      import AlgorithmX from '@algorithmx/react-native-sdk';
+ *      import AlgorithmX from '@algorithmxcloud/react-native-sdk';
  *      AlgorithmX.addListener('onDeepLink', ({ url }) => { ... });
  *      await AlgorithmX.init('https://your-backend.com');
  *
@@ -20,7 +20,7 @@
  * 3. Pass FCM/APNs tokens (usually from native code):
  *      AlgorithmX.registerDeviceToken(token);
  *
- * Integration guide: https://algorithmx.com/en/docs/integrations/react-native
+ * Integration guide: https://algorithmx.cloud/en/docs/integrations/react-native
  */
 
 import {
@@ -37,7 +37,7 @@ const { EngageSdkModule } = NativeModules;
 if (!EngageSdkModule) {
   throw new Error(
     '[AlgorithmX] Native module not found.\n' +
-      'Rebuild the app after installing @algorithmx/react-native-sdk.\n' +
+      'Rebuild the app after installing @algorithmxcloud/react-native-sdk.\n' +
       'iOS: add the AlgorithmXSDK pod to your Podfile and run `pod install`.'
   );
 }
