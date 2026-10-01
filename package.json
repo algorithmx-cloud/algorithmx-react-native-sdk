@@ -1,0 +1,56 @@
+{
+  "name": "@algorithmx/react-native-sdk",
+  "version": "1.0.0",
+  "description": "AlgorithmX SDK for React Native: customer identity and events, push notifications, campaign actions, and in-app campaigns on Android and iOS.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "files": [
+    "src/",
+    "lib/",
+    "android/build.gradle",
+    "android/src/",
+    "ios/",
+    "*.podspec",
+    "react-native.config.js",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepack": "npm run build"
+  },
+  "keywords": [
+    "react-native",
+    "ios",
+    "android",
+    "algorithmx",
+    "push-notifications",
+    "in-app-messaging",
+    "analytics"
+  ],
+  "homepage": "https://algorithmx.com/en/docs/integrations/react-native",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algorithmx-cloud/algorithmx-react-native-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/algorithmx-cloud/algorithmx-react-native-sdk/issues"
+  },
+  "author": "AlgorithmX <hello@algorithmx.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-native": "^0.79.0",
+    "typescript": "^5.0.0"
+  }
+}

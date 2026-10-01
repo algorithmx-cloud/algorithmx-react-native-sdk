@@ -1,0 +1,40 @@
+# Publishes @algorithmx/react-native-sdk to npm when a version tag such as 1.0.0
+# is pushed. `npm publish` runs the prepack script, which compiles src/ to lib/.
+#
+# Repository secret:
+#   NPM_TOKEN  granular access token of the npm "algorithmx" organization with
+#              read and write access to @algorithmx/react-native-sdk
+#
+# Publish the Android SDK (Maven Central) and tag the iOS SDK first: this
+# package depends on com.algorithmx:android-sdk and the AlgorithmXSDK pod.
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for npm provenance.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Check package version matches the tag
+        run: |
+          version=$(node -p "require('./package.json').version")
+          test "$version" = "${GITHUB_REF_NAME}" || { echo "package.json version $version does not match tag ${GITHUB_REF_NAME}"; exit 1; }
+
+      - run: npm install
+      - run: npm run typecheck
+
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

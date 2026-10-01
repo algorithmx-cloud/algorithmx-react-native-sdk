@@ -1,0 +1,14 @@
+# Dependencies and build output
+node_modules/
+lib/
+*.tgz
+
+# Native build state
+android/build/
+android/.gradle/
+android/.cxx/
+
+# Editor and operating-system state
+.idea/
+*.iml
+.DS_Store
