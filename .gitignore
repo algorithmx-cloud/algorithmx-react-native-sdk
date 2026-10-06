@@ -7,6 +7,9 @@ lib/
 android/build/
 android/.gradle/
 android/.cxx/
+expo/android/build/
+expo/android/.gradle/
+expo/android/.cxx/
 
 # Editor and operating-system state
 .idea/

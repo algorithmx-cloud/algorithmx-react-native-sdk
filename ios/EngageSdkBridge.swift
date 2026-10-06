@@ -1,11 +1,14 @@
 import AlgorithmXSDK
 import Foundation
 import React
+import UIKit
+import UserNotifications
 
 // ─── Native setup (host AppDelegate + JS `init`) ─────────────────────────────
 
 /// Initializes the native SDK once and attaches the JS event bridge. Both the host
-/// AppDelegate and the JS `init` call go through here; a different URL is rejected.
+/// AppDelegate and the JS `init` call go through here; a different URL or partner ID
+/// is rejected. The partner ID is sent as the `x-partner-id` header on every request.
 ///
 /// Call it from `application(_:didFinishLaunchingWithOptions:)` so a silent
 /// APNs push that launches the app is handled before JavaScript starts.
@@ -13,29 +16,81 @@ import React
 public final class AlgorithmXReactNative: NSObject {
     private static let lock = NSLock()
     private static var configuredUrl: String?
+    private static var configuredPartnerId: String?
 
-    /// Returns `false` if the SDK was already initialized with a different URL.
+    @objc public static var isInitialized: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return configuredUrl != nil
+    }
+
+    /// Returns `false` if a value is empty, or the SDK was already initialized with a
+    /// different URL or partner ID.
     @discardableResult
-    @objc public static func initialize(apiBaseUrl: String) -> Bool {
-        initialize(apiBaseUrl: apiBaseUrl, appGroup: nil)
+    @objc public static func initialize(apiBaseUrl: String, partnerId: String) -> Bool {
+        initialize(apiBaseUrl: apiBaseUrl, partnerId: partnerId, appGroup: nil)
     }
 
     /// Same, sharing the SDK config with your Notification Service Extension through
     /// `appGroup` so it can report delivered + impression (see the iOS guide).
     @discardableResult
-    @objc public static func initialize(apiBaseUrl: String, appGroup: String?) -> Bool {
+    @objc public static func initialize(apiBaseUrl: String, partnerId: String, appGroup: String?) -> Bool {
         let url = apiBaseUrl.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        guard !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !partnerId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         lock.lock()
         defer { lock.unlock() }
-        if let configuredUrl { return configuredUrl == url }
+        if let configuredUrl { return configuredUrl == url && configuredPartnerId == partnerId }
         if let appGroup = appGroup {
-            AlgorithmX.shared.initialize(apiBaseUrl: url, appGroup: appGroup)
+            AlgorithmX.shared.initialize(apiBaseUrl: url, partnerId: partnerId, appGroup: appGroup)
         } else {
-            AlgorithmX.shared.initialize(apiBaseUrl: url)
+            AlgorithmX.shared.initialize(apiBaseUrl: url, partnerId: partnerId)
         }
         EventBridge.shared.attachToSdk()
         configuredUrl = url
+        configuredPartnerId = partnerId
+        return true
+    }
+
+    /// Forward Apple's token without making the host convert it to hexadecimal text.
+    @objc public static func registerDeviceToken(_ deviceToken: Data) {
+        AlgorithmX.shared.registerDeviceToken(deviceToken.map { String(format: "%02x", $0) }.joined())
+    }
+
+    /// False leaves the completion handler untouched for the host's other push provider.
+    @discardableResult
+    @objc public static func handleRemoteNotification(
+        _ userInfo: [AnyHashable: Any],
+        completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) -> Bool {
+        guard AlgorithmX.shared.isAlgorithmXPush(userInfo: userInfo) else { return false }
+        AlgorithmX.shared.handleNotification(userInfo: userInfo) { completionHandler(.newData) }
+        return true
+    }
+
+    @discardableResult
+    @objc public static func handleForegroundNotification(
+        _ notification: UNNotification,
+        presentationOptions: UNNotificationPresentationOptions = [.banner, .list, .sound],
+        completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) -> Bool {
+        let userInfo = notification.request.content.userInfo
+        guard AlgorithmX.shared.isAlgorithmXPush(userInfo: userInfo) else { return false }
+        AlgorithmX.shared.handleNotification(userInfo: userInfo) { completionHandler(presentationOptions) }
+        return true
+    }
+
+    @discardableResult
+    @objc public static func handleNotificationResponse(
+        _ response: UNNotificationResponse,
+        completionHandler: @escaping () -> Void
+    ) -> Bool {
+        guard AlgorithmX.shared.isAlgorithmXPush(userInfo: response.notification.request.content.userInfo) else { return false }
+        AlgorithmX.shared.handleNotificationResponse(
+            actionIdentifier: response.actionIdentifier,
+            userInfo: response.notification.request.content.userInfo,
+            completionHandler: completionHandler
+        )
         return true
     }
 }
@@ -182,14 +237,35 @@ final class EngageSdkModule: RCTEventEmitter {
 
     override func stopObserving() { EventBridge.shared.stopObserving(self) }
 
-    // JS `init`. Named `configure` because `init…` selectors belong to
-    // Objective-C's initializer family.
-    @objc(configure:resolver:rejecter:)
-    func configure(apiBaseUrl: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        if AlgorithmXReactNative.initialize(apiBaseUrl: apiBaseUrl) {
+    @objc(connect:rejecter:)
+    func connect(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        if AlgorithmXReactNative.isInitialized {
             resolve(nil)
         } else {
-            reject("E_INIT", "AlgorithmX is already initialized with a different apiBaseUrl", nil)
+            reject("E_INIT", "Initialize AlgorithmXReactNative in AppDelegate before calling AlgorithmX.init()", nil)
+        }
+    }
+
+    @objc(setLoggingEnabled:)
+    func setLoggingEnabled(_ enabled: Bool) {
+        AlgorithmX.shared.setLoggingEnabled(enabled)
+    }
+
+    // JS `init`. Named `configure` because `init…` selectors belong to
+    // Objective-C's initializer family.
+    @objc(configure:partnerId:resolver:rejecter:)
+    func configure(
+        apiBaseUrl: String, partnerId: String,
+        resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        if AlgorithmXReactNative.initialize(apiBaseUrl: apiBaseUrl, partnerId: partnerId) {
+            resolve(nil)
+        } else {
+            reject(
+                "E_INIT",
+                "AlgorithmX is already initialized with a different apiBaseUrl or partnerId, or a value is empty",
+                nil
+            )
         }
     }
 
@@ -250,6 +326,20 @@ final class EngageSdkModule: RCTEventEmitter {
     @objc(registerDeviceToken:)
     func registerDeviceToken(_ token: String) {
         AlgorithmX.shared.registerDeviceToken(token)
+    }
+
+    @objc(handleRemoteMessage:title:body:resolver:rejecter:)
+    func handleRemoteMessage(
+        _ data: [String: Any], title: String?, body: String?,
+        resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        let userInfo = anyHashableMap(data)
+        guard AlgorithmX.shared.isAlgorithmXPush(userInfo: userInfo) else { resolve(false); return }
+        guard AlgorithmXReactNative.isInitialized else {
+            reject("E_PUSH", "Initialize AlgorithmXReactNative in AppDelegate before handling push", nil)
+            return
+        }
+        AlgorithmX.shared.handleNotification(userInfo: userInfo) { resolve(true) }
     }
 
     /// For apps that route APNs payloads through JS; the usual wiring is the

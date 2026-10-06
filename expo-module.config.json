@@ -1,0 +1,11 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "podspecPath": "expo/apple/AlgorithmXExpoIntegration.podspec",
+    "appDelegateSubscribers": ["AlgorithmXExpoAppDelegateSubscriber"]
+  },
+  "android": {
+    "name": "algorithmx-expo-integration",
+    "path": "expo/android"
+  }
+}

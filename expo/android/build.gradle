@@ -1,0 +1,41 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'expo-module-gradle-plugin'
+}
+
+def sdkPackage = new JsonSlurper().parse(new File(projectDir, '../../package.json'))
+version = sdkPackage.version
+
+// Expo 55 can link notification modules from source or use its bundled AAR.
+// The integration stays inactive when its config plugin is not selected.
+def notificationsConfigPath = providers.exec {
+    workingDir(rootDir)
+    commandLine('node', '--print', "try { require.resolve('expo-notifications/expo-module.config.json') } catch (_) { '' }")
+}.standardOutput.asText.get().trim()
+
+android {
+    namespace 'algorithmx.engage.expo'
+    defaultConfig {
+        minSdk 24
+        versionCode 1
+        versionName sdkPackage.version
+    }
+    if (!notificationsConfigPath) {
+        sourceSets.main.java.exclude '**/AlgorithmXExpoMessagingService.kt'
+    }
+}
+
+dependencies {
+    implementation project(':algorithmxcloud_react-native-sdk')
+    // The public service inherits these types, so host compilers/lint need them.
+    api 'com.google.firebase:firebase-messaging:25.0.1'
+    if (rootProject.findProject(':expo-notifications') != null) {
+        api project(':expo-notifications')
+    } else if (notificationsConfigPath) {
+        def publication = new JsonSlurper().parse(new File(notificationsConfigPath)).android.publication
+        api "${publication.groupId}:${publication.artifactId}:${publication.version}"
+    }
+}

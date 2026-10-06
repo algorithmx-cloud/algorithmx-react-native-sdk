@@ -7,7 +7,11 @@
  */
 @interface RCT_EXTERN_MODULE(EngageSdkModule, RCTEventEmitter)
 
+RCT_EXTERN_METHOD(connect:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(setLoggingEnabled:(BOOL)enabled)
+
 RCT_EXTERN_METHOD(configure:(NSString *)apiBaseUrl
+                  partnerId:(NSString *)partnerId
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
@@ -26,6 +30,11 @@ RCT_EXTERN_METHOD(updateNotificationStatus:(NSInteger)notificationId
                   errorMessage:(NSString *)errorMessage)
 
 RCT_EXTERN_METHOD(registerDeviceToken:(NSString *)token)
+RCT_EXTERN_METHOD(handleRemoteMessage:(NSDictionary *)data
+                  title:(NSString *)title
+                  body:(NSString *)body
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(handleSilentNotification:(NSDictionary *)userInfo)
 RCT_EXTERN_METHOD(handleNotificationResponse:(NSString *)actionIdentifier userInfo:(NSDictionary *)userInfo)
 

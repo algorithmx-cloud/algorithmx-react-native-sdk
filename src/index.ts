@@ -7,12 +7,12 @@
  * ─── QUICK START ────────────────────────────────────────────────────────────
  *
  * 1. Initialise natively at launch (so pushes that start the app are handled):
- *      iOS      AlgorithmXReactNative.initialize(apiBaseUrl:)   in AppDelegate
- *      Android  AlgorithmXReactNative.initialize(app, url)      in Application.onCreate
- *    then register listeners and bind JS with the same URL:
+ *      iOS      AlgorithmXReactNative.initialize(apiBaseUrl:partnerId:)  in AppDelegate
+ *      Android  AlgorithmXReactNative.initialize(app, url, partnerId)    in Application.onCreate
+ *    then register listeners and connect JS to the native configuration:
  *      import AlgorithmX from '@algorithmxcloud/react-native-sdk';
  *      AlgorithmX.addListener('onDeepLink', ({ url }) => { ... });
- *      await AlgorithmX.init('https://your-backend.com');
+ *      await AlgorithmX.init();
  *
  * 2. Identify the user after login:
  *      AlgorithmX.identify('user-123');
@@ -47,6 +47,15 @@ const emitter = new NativeEventEmitter(EngageSdkModule);
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type SdkData = Record<string, unknown>;
+
+/** Compatible with Firebase's remote messages without requiring Firebase in this package. */
+export interface RemoteMessage {
+  data?: Record<string, string | object>;
+  notification?: { title?: string; body?: string };
+  messageId?: string;
+  from?: string;
+  sentTime?: number;
+}
 
 export interface TrackPayload {
   [key: string]: string | number | boolean | object | null;
@@ -122,13 +131,28 @@ const EVENT_NAMES: (keyof AlgorithmXEventMap)[] = [
 
 // ─── SDK object ───────────────────────────────────────────────────────────────
 
+function init(): Promise<void>;
+function init(apiBaseUrl: string, partnerId: string): Promise<void>;
+function init(apiBaseUrl?: string, partnerId?: string): Promise<void> {
+  if (apiBaseUrl === undefined && partnerId === undefined) {
+    return EngageSdkModule.connect();
+  }
+  if (typeof apiBaseUrl !== 'string' || typeof partnerId !== 'string') {
+    return Promise.reject(new Error('Pass both apiBaseUrl and partnerId, or call AlgorithmX.init() after native startup'));
+  }
+  return EngageSdkModule.configure(apiBaseUrl, partnerId);
+}
+
 const AlgorithmX = {
   /**
-   * Bind JS to the native SDK. Safe to call when native code already
-   * initialized it with the same URL; rejects if the URL differs.
+   * Connect to the SDK started natively, without repeating its configuration.
+   * The existing init(apiBaseUrl, partnerId) form remains supported.
    */
-  init(apiBaseUrl: string): Promise<void> {
-    return EngageSdkModule.configure(apiBaseUrl);
+  init,
+
+  /** Debug logging. Errors remain visible when logging is disabled. */
+  setLoggingEnabled(enabled: boolean): void {
+    EngageSdkModule.setLoggingEnabled(enabled);
   },
 
   // ─── Identity & events ─────────────────────────────────────────────────────
@@ -159,13 +183,14 @@ const AlgorithmX = {
     EngageSdkModule.resetIdentity();
   },
 
+  /** Recommend camelCase names and payload keys; custom data is forwarded unchanged. */
   trackEvent(name: string, payload?: TrackPayload): void {
     EngageSdkModule.trackEvent(name, payload ?? {});
   },
 
   /**
    * Track a campaign interaction. `interactionType` must be one of
-   * impression, click, close, close_dismiss, submit, copy. Campaign and
+   * impression, click, close, closeDismiss, submit, copy. Campaign and
    * variation ids should be numeric strings (the backend expects ints).
    */
   trackCampaignInteraction(
@@ -197,6 +222,23 @@ const AlgorithmX = {
   /** Register an FCM (Android) or APNs hex (iOS) token with the backend. */
   registerDeviceToken(token: string): void {
     EngageSdkModule.registerDeviceToken(token);
+  },
+
+  /**
+   * Forward a remote message and await native processing. Returns true for an
+   * AlgorithmX message, false for another provider's message. Forward through
+   * only one path: do not call this for a message already handled natively.
+   */
+  async handleRemoteMessage(message: RemoteMessage): Promise<boolean> {
+    const data: Record<string, string> = Object.create(null);
+    for (const [key, value] of Object.entries(message.data ?? {})) {
+      data[key] = typeof value === 'string' ? value : JSON.stringify(value);
+    }
+    return EngageSdkModule.handleRemoteMessage(
+      data,
+      message.notification?.title ?? null,
+      message.notification?.body ?? null
+    );
   },
 
   /**

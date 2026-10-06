@@ -17,14 +17,29 @@ class EngageSdkModule(private val reactContext: ReactApplicationContext) :
 
     override fun getName(): String = "EngageSdkModule"
 
-    // JS `init`. Mirrors the iOS selector name.
     @ReactMethod
-    fun configure(apiBaseUrl: String, promise: Promise) {
-        val app = reactContext.applicationContext as Application
-        if (AlgorithmXReactNative.initialize(app, apiBaseUrl)) {
+    fun connect(promise: Promise) {
+        if (AlgorithmXReactNative.isInitialized()) {
             promise.resolve(null)
         } else {
-            promise.reject("E_INIT", "AlgorithmX is already initialized with a different apiBaseUrl")
+            promise.reject("E_INIT", "Initialize AlgorithmXReactNative in Application.onCreate before calling AlgorithmX.init()")
+        }
+    }
+
+    @ReactMethod
+    fun setLoggingEnabled(enabled: Boolean) = AlgorithmX.setLoggingEnabled(enabled)
+
+    // JS `init`. Mirrors the iOS selector name.
+    @ReactMethod
+    fun configure(apiBaseUrl: String, partnerId: String, promise: Promise) {
+        val app = reactContext.applicationContext as Application
+        if (AlgorithmXReactNative.initialize(app, apiBaseUrl, partnerId)) {
+            promise.resolve(null)
+        } else {
+            promise.reject(
+                "E_INIT",
+                "AlgorithmX is already initialized with a different apiBaseUrl or partnerId, or a value is empty"
+            )
         }
     }
 
@@ -68,6 +83,19 @@ class EngageSdkModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun registerDeviceToken(token: String) = AlgorithmX.registerDeviceToken(token)
+
+    /** Awaitable so a JS background handler remains alive until native processing completes. */
+    @ReactMethod
+    fun handleRemoteMessage(data: ReadableMap, notificationTitle: String?, notificationBody: String?, promise: Promise) {
+        try {
+            val strings = data.toMap().mapValues { it.value.toString() }
+            promise.resolve(AlgorithmXReactNative.handleFcmMessage(
+                reactContext.applicationContext, strings, notificationTitle, notificationBody
+            ))
+        } catch (error: Exception) {
+            promise.reject("E_PUSH", "AlgorithmX could not process the push message", error)
+        }
+    }
 
     /** For apps that receive FCM in JS (e.g. @react-native-firebase/messaging). */
     @ReactMethod

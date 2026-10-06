@@ -2,6 +2,7 @@ package algorithmx.engage.rn
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -27,20 +28,46 @@ import com.facebook.react.bridge.WritableMap
  */
 object AlgorithmXReactNative {
     private var configuredUrl: String? = null
+    private var configuredPartnerId: String? = null
 
-    /** Returns false if the SDK was already initialized with a different URL. */
     @JvmStatic
     @Synchronized
-    fun initialize(application: Application, apiBaseUrl: String): Boolean {
+    fun isInitialized(): Boolean = configuredUrl != null
+
+    /**
+     * Returns false if a value is blank, or the SDK was already initialized with a
+     * different URL or partner ID. [partnerId] is sent as the `x-partner-id` header.
+     */
+    @JvmStatic
+    @Synchronized
+    fun initialize(application: Application, apiBaseUrl: String, partnerId: String): Boolean {
         val url = apiBaseUrl.trimEnd('/')
-        if (url.isBlank()) return false
-        configuredUrl?.let { return it == url }
-        AlgorithmX.initialize(application, url)
+        if (url.isBlank() || partnerId.isBlank()) return false
+        configuredUrl?.let { return it == url && configuredPartnerId == partnerId }
+        AlgorithmX.initialize(application, url, partnerId)
         EventBridge.attachToSdk()
         application.registerActivityLifecycleCallbacks(ForegroundTracker)
         configuredUrl = url
+        configuredPartnerId = partnerId
         return true
     }
+
+    /** Returns false without touching messages belonging to another provider. */
+    @JvmStatic
+    fun handleFcmMessage(
+        context: Context,
+        data: Map<String, String>,
+        notificationTitle: String? = null,
+        notificationBody: String? = null
+    ): Boolean {
+        if (!AlgorithmX.isAlgorithmXPush(data)) return false
+        check(isInitialized()) { "Initialize AlgorithmXReactNative in Application.onCreate before handling push" }
+        AlgorithmX.handleFcmMessage(context, data, notificationTitle, notificationBody)
+        return true
+    }
+
+    @JvmStatic
+    fun registerDeviceToken(token: String) = AlgorithmX.registerDeviceToken(token)
 }
 
 /**

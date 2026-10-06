@@ -1,6 +1,6 @@
 {
   "name": "@algorithmxcloud/react-native-sdk",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "AlgorithmX SDK for React Native: customer identity and events, push notifications, campaign actions, and in-app campaigns on Android and iOS.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -14,10 +14,19 @@
     "ios/",
     "*.podspec",
     "react-native.config.js",
-    "CHANGELOG.md"
+    "firebase.js",
+    "firebase.d.ts",
+    "CHANGELOG.md",
+    "app.plugin.js",
+    "expo-module.config.json",
+    "expo/android/build.gradle",
+    "expo/android/src/",
+    "expo/apple/"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "npm run build && npm run test:types && node --test test/*.test.cjs",
+    "test:types": "tsc --noEmit --module ESNext --moduleResolution bundler --target ES2017 --strict --skipLibCheck test/firebase-types.mts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepack": "npm run build"
   },
@@ -44,13 +53,30 @@
     "access": "public"
   },
   "peerDependencies": {
+    "@react-native-firebase/messaging": ">=22.0.0 <27.0.0",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "expo": ">=55.0.0",
+    "expo-notifications": ">=55.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@react-native-firebase/messaging": {
+      "optional": true
+    },
+    "expo": {
+      "optional": true
+    },
+    "expo-notifications": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@react-native-firebase/app": "26.4.0",
+    "@react-native-firebase/messaging": "26.4.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
     "react-native": "^0.79.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "expo": "~55.0.0"
   }
 }
