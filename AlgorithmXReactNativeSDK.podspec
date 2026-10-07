@@ -26,6 +26,6 @@ Pod::Spec.new do |s|
 
   # Native iOS SDK. CocoaPods trunk stops accepting new pods on December 2, 2026,
   # so the app's Podfile installs it from the Git tag:
-  #   pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.2'
-  s.dependency 'AlgorithmXSDK', '~> 1.0', '>= 1.0.2'
+  #   pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.3'
+  s.dependency 'AlgorithmXSDK', '~> 1.0', '>= 1.0.3'
 end

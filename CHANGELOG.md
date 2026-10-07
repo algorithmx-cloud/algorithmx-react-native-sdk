@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3
+
+- General `trackEvent` requests now use `POST /api/v1/Event/Log` with an array of `{ eventType, data, timestamp }` events and ISO 8601 UTC timestamps. Empty properties are sent as `{}`.
+- Event requests send the current SDK fingerprint in `X-Anonymous-Id`, alongside `x-partner-id`. Event names and custom data retain their supplied spelling.
+- Campaign/push interaction, identity, notification-status, and push-token endpoints retain their existing contracts.
+- Requires native Android/iOS SDK 1.0.3; the Expo plugin installs the 1.0.3 iOS tag.
+
 ## 1.0.2
 
 - Added an optional Expo SDK 55 / Expo Notifications integration: build-time configuration, early native startup, platform token registration, iOS callback composition, and a single Android FCM service preserving unrelated Expo messages. Config plugin transforms are idempotent and reject an existing custom Android FCM owner.

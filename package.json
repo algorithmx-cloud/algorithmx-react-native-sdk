@@ -1,6 +1,6 @@
 {
   "name": "@algorithmxcloud/react-native-sdk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "AlgorithmX SDK for React Native: customer identity and events, push notifications, campaign actions, and in-app campaigns on Android and iOS.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

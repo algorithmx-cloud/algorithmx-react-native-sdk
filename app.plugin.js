@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const serviceName = 'algorithmx.engage.expo.AlgorithmXExpoMessagingService';
 const expoServiceName = 'expo.modules.notifications.service.ExpoFirebaseMessagingService';
-const nativePod = "  pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.2'";
+const nativePod = "  pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.3'";
 
 function validateOptions(options) {
   if (!options || typeof options.apiBaseUrl !== 'string' || !/^https?:\/\/\S+$/.test(options.apiBaseUrl)
