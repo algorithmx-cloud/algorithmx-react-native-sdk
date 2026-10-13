@@ -17,6 +17,9 @@ RCT_EXTERN_METHOD(configure:(NSString *)apiBaseUrl
 
 RCT_EXTERN_METHOD(setDeviceFingerprint:(NSString *)fingerprint)
 RCT_EXTERN_METHOD(getDeviceFingerprint:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(setInAppLanguage:(NSString *)language)
+RCT_EXTERN_METHOD(getAnonymousId:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(setUserProfile:(NSDictionary *)attributes)
 RCT_EXTERN_METHOD(identify:(NSString *)userId attributes:(NSDictionary *)attributes)
 RCT_EXTERN_METHOD(resetIdentity)
 RCT_EXTERN_METHOD(trackEvent:(NSString *)name payload:(NSDictionary *)payload)

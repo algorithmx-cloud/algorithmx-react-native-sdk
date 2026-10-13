@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import algorithmx.engage.rn.AlgorithmXReactNative
+import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import expo.modules.core.interfaces.ApplicationLifecycleListener
 import expo.modules.core.interfaces.Package
@@ -21,8 +22,11 @@ class AlgorithmXExpoPackage : Package {
                 check(AlgorithmXReactNative.initialize(application, url, partnerId)) {
                     "AlgorithmX Expo configuration conflicts with existing native startup"
                 }
-                FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-                    AlgorithmXReactNative.registerDeviceToken(token)
+                // API-based in-app views also work in apps without Firebase/push setup.
+                if (FirebaseApp.getApps(application).any { it.name == FirebaseApp.DEFAULT_APP_NAME }) {
+                    FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                        AlgorithmXReactNative.registerDeviceToken(token)
+                    }
                 }
             }
         })

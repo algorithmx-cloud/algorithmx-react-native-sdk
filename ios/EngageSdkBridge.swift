@@ -281,6 +281,19 @@ final class EngageSdkModule: RCTEventEmitter {
         resolve(AlgorithmX.shared.getDeviceFingerprint())
     }
 
+    @objc(setInAppLanguage:)
+    func setInAppLanguage(language: String) { AlgorithmX.shared.setInAppLanguage(language) }
+
+    @objc(getAnonymousId:rejecter:)
+    func getAnonymousId(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        resolve(AlgorithmX.shared.getAnonymousId())
+    }
+
+    @objc(setUserProfile:)
+    func setUserProfile(attributes: [String: Any]) {
+        AlgorithmX.shared.setUserProfile(attributes)
+    }
+
     @objc(identify:attributes:)
     func identify(userId: String, attributes: [String: Any]) {
         AlgorithmX.shared.identifyUser(userId: userId, attributes: attributes.isEmpty ? nil : attributes)

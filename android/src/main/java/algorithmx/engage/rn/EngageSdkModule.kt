@@ -52,6 +52,15 @@ class EngageSdkModule(private val reactContext: ReactApplicationContext) :
     fun getDeviceFingerprint(promise: Promise) = promise.resolve(AlgorithmX.getDeviceFingerprint())
 
     @ReactMethod
+    fun setInAppLanguage(language: String) = AlgorithmX.setInAppLanguage(language)
+
+    @ReactMethod
+    fun getAnonymousId(promise: Promise) = promise.resolve(AlgorithmX.getAnonymousId())
+
+    @ReactMethod
+    fun setUserProfile(attributes: ReadableMap) = AlgorithmX.setUserProfile(attributes.toMap())
+
+    @ReactMethod
     fun identify(userId: String, attributes: ReadableMap) =
         AlgorithmX.identifyUser(userId, attributes.toMap().ifEmpty { null })
 

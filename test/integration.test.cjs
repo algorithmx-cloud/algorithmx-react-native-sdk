@@ -16,6 +16,11 @@ function integration({ platform = 'android', initialized = true, token = 'fcm-cu
     },
     configure: async (...args) => calls.push({ method: 'configure', args }),
     setLoggingEnabled: (...args) => calls.push({ method: 'logging', args }),
+    setInAppLanguage: (...args) => calls.push({ method: 'language', args }),
+    identify: (...args) => calls.push({ method: 'identify', args }),
+    setUserProfile: (...args) => calls.push({ method: 'profile', args }),
+    getAnonymousId: async () => 'a781ba16-c6fb-469d-83fb-2d2cc0eb0057',
+    resetIdentity: () => calls.push({ method: 'reset' }),
     registerDeviceToken: (...args) => calls.push({ method: 'token', args }),
     handleRemoteMessage: async (...args) => {
       calls.push({ method: 'push', args });
@@ -79,6 +84,31 @@ test('init() rejects a missing native startup; explicit configuration remains co
   assert.deepEqual(calls[1], { method: 'configure', args: ['https://api.example.com', 'partner'] });
   await assert.rejects(sdk.init('https://api.example.com'), /Pass both/);
   assert.equal(calls.length, 2);
+});
+
+test('identity APIs forward supported identifiers and traits; anonymous UUID comes from native', async () => {
+  const { sdk, calls } = integration();
+  const attributes = { email: 'user@example.com', firstName: 'Amina', pushOptIn: true };
+  sdk.identify('customer_123', attributes);
+  sdk.setUserProfile({ firstName: 'Amina', pushOptIn: false });
+  assert.equal(await sdk.getAnonymousId(), 'a781ba16-c6fb-469d-83fb-2d2cc0eb0057');
+  assert.equal(calls[0].args[1], attributes);
+  assert.equal(calls[1].args[0].pushOptIn, false);
+  assert.throws(() => sdk.identify('customer_123', { plan: 'premium' }), /Unsupported profile field/);
+  assert.throws(() => sdk.identify(' ', attributes), /userId must not be empty/);
+  assert.throws(() => sdk.setUserProfile({ email: 'user@example.com' }), /Unsupported profile field/);
+  assert.throws(() => sdk.setUserProfile({ pushOptIn: 'true' }), /boolean/);
+  assert.throws(() => sdk.setUserProfile({}), /empty/);
+  assert.equal(calls.length, 2);
+  sdk.resetIdentity();
+  assert.equal(calls[2].method, 'reset');
+});
+
+test('app language override delegates to native, including empty text to restore automatic language', () => {
+  const { sdk, calls } = integration();
+  sdk.setInAppLanguage('ar-SA');
+  sdk.setInAppLanguage('');
+  assert.deepEqual(calls, [{ method: 'language', args: ['ar-SA'] }, { method: 'language', args: [''] }]);
 });
 
 test('debug logging forwards to the native SDK', () => {
