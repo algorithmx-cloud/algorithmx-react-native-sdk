@@ -17,7 +17,7 @@
  * 2. Identify the user after login:
  *      AlgorithmX.identify('user-123');
  *
- * 3. Pass FCM/APNs tokens (usually from native code):
+ * 3. Pass FCM tokens (usually from native code):
  *      AlgorithmX.registerDeviceToken(token);
  *
  * Integration guide: https://algorithmx.cloud/en/docs/integrations/react-native
@@ -271,7 +271,7 @@ const AlgorithmX = {
 
   // ─── Push ──────────────────────────────────────────────────────────────────
 
-  /** Register an FCM (Android) or APNs hex (iOS) token with the backend. */
+  /** Register an FCM token for Android or iOS with the backend. */
   registerDeviceToken(token: string): void {
     EngageSdkModule.registerDeviceToken(token);
   },

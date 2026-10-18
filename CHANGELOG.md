@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1 — October 18, 2026
+
+- The optional React Native Firebase adapter registers current and refreshed FCM tokens on iOS as well as Android. It registers for remote messages first when iOS registration is disabled.
+- Keep iOS message handling in the host's native callbacks to avoid processing a notification twice. Existing Android foreground forwarding and cleanup behavior are preserved.
+- Document Firebase token forwarding for both platforms. Native AlgorithmX SDK requirements remain 1.1.0; Firebase remains optional for consumers of the main package.
+
 ## 1.1.0 — October 13, 2026
 
 - Production API-based in-app delivery requires the backend work tracked in [AlgorithmX issue #207](https://github.com/algorithmx-cloud/AlgorithmX/issues/207). SDK flows were verified on physical Android and iOS devices against the local test backend.

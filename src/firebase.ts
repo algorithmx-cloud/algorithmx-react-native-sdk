@@ -5,13 +5,15 @@ import AlgorithmX, { RemoteMessage } from './index';
 /** Shared shape of the namespaced and modular Firebase messaging instances. */
 export interface FirebaseMessagingInstance {
   readonly app: { readonly name: string };
+  readonly isDeviceRegisteredForRemoteMessages?: boolean;
 }
 
 // Keep Firebase types out of the public declarations: importing the main SDK
 // must not require Firebase. Metro resolves this optional entry in RN apps.
-const { getMessaging, getToken, onMessage, onTokenRefresh } = require('@react-native-firebase/messaging') as {
+const { getMessaging, getToken, onMessage, onTokenRefresh, registerDeviceForRemoteMessages } = require('@react-native-firebase/messaging') as {
   getMessaging(): FirebaseMessagingInstance;
   getToken(messaging: FirebaseMessagingInstance): Promise<string>;
+  registerDeviceForRemoteMessages(messaging: FirebaseMessagingInstance): Promise<void>;
   onMessage(messaging: FirebaseMessagingInstance, listener: (message: RemoteMessage) => void | Promise<void>): () => void;
   onTokenRefresh(messaging: FirebaseMessagingInstance, listener: (token: string) => void): () => void;
 };
@@ -28,7 +30,7 @@ export interface FirebaseMessagingOptions {
 export interface FirebaseMessagingConnection {
   /** Await once at app startup. Does not request notification permission. */
   ready: Promise<void>;
-  /** Register the current Android FCM token again, for example after permission changes. */
+  /** Register the current FCM token again on Android or iOS, for example after permission changes. */
   refreshToken(): Promise<void>;
   /** Removes foreground/token listeners. The app still owns its background handler. */
   remove(): void;
@@ -44,8 +46,8 @@ export async function handleFirebaseMessage(message: RemoteMessage): Promise<boo
 }
 
 /**
- * Connect Android foreground messages and FCM tokens. On iOS keep the native
- * AlgorithmXReactNative push helpers; Firebase's iOS token is not an APNs token.
+ * Register FCM tokens on Android and iOS; forward Android foreground messages.
+ * iOS notification delivery stays with the host's existing native callbacks.
  * Call once at app startup, outside screen components. Never replaces the app's
  * background handler or installs a second native messaging service.
  */
@@ -56,8 +58,12 @@ export function connectFirebaseMessaging(options: FirebaseMessagingOptions = {})
   const reportError = options.onError ?? ((error: unknown) => console.warn('[AlgorithmX] Firebase integration failed', error));
 
   async function refreshToken() {
-    if (!active || Platform.OS !== 'android') return;
+    if (!active || (Platform.OS !== 'android' && Platform.OS !== 'ios')) return;
     await AlgorithmX.init();
+    if (Platform.OS === 'ios' && messaging.isDeviceRegisteredForRemoteMessages === false) {
+      await registerDeviceForRemoteMessages(messaging);
+    }
+    if (!active) return;
     const token = await getToken(messaging);
     if (active && token) AlgorithmX.registerDeviceToken(token);
   }
@@ -78,6 +84,8 @@ export function connectFirebaseMessaging(options: FirebaseMessagingOptions = {})
         reportError(error);
       }
     }));
+  }
+  if (Platform.OS === 'android' || Platform.OS === 'ios') {
     subscriptions.push(onTokenRefresh(messaging, (token) => {
       if (!active || !token) return;
       AlgorithmX.init().then(() => {

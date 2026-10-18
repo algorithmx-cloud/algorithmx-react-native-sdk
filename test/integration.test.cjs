@@ -8,7 +8,7 @@ function integration({ platform = 'android', initialized = true, token = 'fcm-cu
   const calls = [];
   const listeners = {};
   const removed = [];
-  const messaging = { app: { name: '[DEFAULT]' } };
+  const messaging = { app: { name: '[DEFAULT]' }, isDeviceRegisteredForRemoteMessages: platform !== 'ios' };
   const native = {
     connect: async () => {
       calls.push({ method: 'connect' });
@@ -29,6 +29,11 @@ function integration({ platform = 'android', initialized = true, token = 'fcm-cu
     },
   };
   const firebase = {
+    registerDeviceForRemoteMessages: async (instance) => {
+      assert.equal(instance, messaging);
+      calls.push({ method: 'registerRemoteMessages' });
+      messaging.isDeviceRegisteredForRemoteMessages = true;
+    },
     getMessaging: () => messaging,
     getToken: async (instance) => {
       assert.equal(instance, messaging);
@@ -160,15 +165,22 @@ test('Firebase adapter registers current and refreshed Android tokens and routes
   connection.remove();
 });
 
-test('Firebase adapter never forwards iOS messages twice or registers its FCM token as APNs', async () => {
-  const { adapter, calls, listeners } = integration({ platform: 'ios' });
+test('Firebase adapter registers current and refreshed iOS FCM tokens while leaving messages native', async () => {
+  const { adapter, calls, listeners, removed } = integration({ platform: 'ios' });
   const firebase = adapter();
   const connection = firebase.connectFirebaseMessaging();
   await connection.ready;
-  assert.equal(await firebase.handleFirebaseMessage({ data: { engageAction: 'algoTriggerWebview' } }), false);
-  assert.deepEqual(Object.keys(listeners), []);
-  assert.equal(calls.filter((call) => ['token', 'push', 'getToken'].includes(call.method)).length, 0);
+  assert.equal(calls.find((call) => call.method === 'token').args[0], 'fcm-current');
+  assert.ok(calls.findIndex((call) => call.method === 'registerRemoteMessages') <
+    calls.findIndex((call) => call.method === 'getToken'));
+  assert.equal(await firebase.handleFirebaseMessage({ data: { engageAction: 'algoShowNotification' } }), false);
+  assert.deepEqual(Object.keys(listeners), ['token']);
+  listeners.token('ios-fcm-refreshed');
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.filter((call) => call.method === 'token').at(-1).args[0], 'ios-fcm-refreshed');
+  assert.equal(calls.filter((call) => call.method === 'push').length, 0);
   connection.remove();
+  assert.deepEqual(removed, ['token']);
 });
 
 test('Firebase startup failure cleans up subscriptions and listener errors reach the app', async () => {

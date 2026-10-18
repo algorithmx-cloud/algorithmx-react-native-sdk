@@ -174,7 +174,7 @@ Expo apps with React Native Firebase or a custom service can keep the matching R
 
 Use one forwarding path per platform. Keep your existing permission prompt and navigation. The SDK does not request permission or replace your other provider's notification handlers.
 
-### Android: React Native Firebase
+### Android and iOS: React Native Firebase
 
 If the app already uses `@react-native-firebase/messaging` (modular API, versions 22–26), import the optional adapter. It does not add Firebase to apps that only import the main SDK.
 
@@ -209,7 +209,7 @@ const push = connectFirebaseMessaging({
 // Use push.remove() if your application tears down this integration.
 ```
 
-The adapter registers the current Android FCM token, listens for token refresh, and forwards foreground AlgorithmX messages. `handleFirebaseMessage` returns `true` after native processing for an AlgorithmX message and `false` otherwise. On iOS it returns `false` and installs no message/token listeners: keep the native APNs helpers below. This avoids processing the same iOS notification twice or registering an iOS FCM token where AlgorithmX expects APNs.
+The adapter registers the current FCM token on Android and iOS, listens for token refresh, and forwards Android foreground AlgorithmX messages. `handleFirebaseMessage` returns `true` after native processing for an AlgorithmX message and `false` otherwise. On iOS it returns `false` and only installs the token-refresh listener: keep native notification handling below to avoid processing notifications twice. The backend expects FCM tokens on both platforms.
 
 If you want to keep all your existing JavaScript listeners, use `await AlgorithmX.handleRemoteMessage(message)` in your Android foreground and background handlers, and keep your existing calls to `AlgorithmX.registerDeviceToken(token)`. Do not also connect the adapter or forward the message natively.
 
@@ -227,15 +227,16 @@ if (AlgorithmXReactNative.handleFcmMessage(
 
 Forward `onNewToken` with `AlgorithmXReactNative.registerDeviceToken(token)`. Also fetch and register the current Firebase token on every app launch; token refresh callbacks alone do not cover an app update that adds AlgorithmX.
 
-### iOS: native APNs callbacks, including apps using Firebase
+### iOS: Firebase tokens and native notification callbacks
 
-Initialize natively before React Native starts. Keep your existing notification delegate, call `application.registerForRemoteNotifications()` on every launch, and enable the Push Notifications capability and Background Modes → Remote notifications. APNs registration is separate from asking permission for visible notifications.
+Initialize natively before React Native starts. Configure Firebase Messaging in the host app and send its FCM token at startup and on refresh. Pass Apple's device token to Firebase rather than AlgorithmX. Keep your existing notification delegate, call `application.registerForRemoteNotifications()` on every launch, and enable the Push Notifications capability and Background Modes → Remote notifications. APNs registration is separate from asking permission for visible notifications.
 
 Use these helpers in the existing callback methods:
 
 ```swift
-// application(_:didRegisterForRemoteNotificationsWithDeviceToken:)
-AlgorithmXReactNative.registerDeviceToken(deviceToken)
+// Import AlgorithmXSDK and FirebaseMessaging in the host AppDelegate.
+// Firebase MessagingDelegate: messaging(_:didReceiveRegistrationToken:)
+if let fcmToken { AlgorithmX.shared.registerDeviceToken(fcmToken) }
 
 // application(_:didReceiveRemoteNotification:fetchCompletionHandler:)
 if AlgorithmXReactNative.handleRemoteNotification(
